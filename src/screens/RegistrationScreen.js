@@ -1,11 +1,44 @@
-import { useEffect, useState } from 'react';
-import { Pressable, Text, TextInput, View, StyleSheet, ImageBackground, Keyboard, Image } from 'react-native';
+import { useEffect, useState, useReducer } from 'react';
+import { 
+    Pressable, 
+    Text, 
+    TextInput,
+    View, 
+    StyleSheet,
+    Keyboard, 
+    Image, 
+    TouchableWithoutFeedback,
+    Alert,
+} from 'react-native';
 
-// import { RiAddCircleLine } from "react-icons/ri";
-// import { AiFillAccountBook } from "react-icons/ai";
+import InputPassword from '../companents/InputPassword';
+
+
+const initialState = {
+    login: '',
+    email: '',
+    password: '',
+}
+
+function reducer(state, action) {
+    switch (action.type){
+        case 'registerInformation/login':
+            return {...state, login: action.payload}
+        case 'registerInformation/email':
+            return { ...state, email: action.payload }
+        case 'registerInformation/password':
+            return { ...state, password: action.payload }
+        case 'registerInformation/reset':
+            return initialState;
+        default:
+            Alert.alert('Data entry error, invalid input field');
+            return state;
+    }
+}
 
 const RegistrationScreen = () => {
-    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+    const [isKeyboardOpen, setIsKeyboardOpen] = useState(true);
+    const [registerInformation, setRegisterInformation] = useReducer(reducer, initialState);
 
     useEffect(() => {
       const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -22,42 +55,59 @@ const RegistrationScreen = () => {
       };
     }, []);
 
+    const henadelSubmit = () => {
+        const { login, email, password } = registerInformation;
+
+        if(login === '' || email === '' || password === ''){
+            return Alert.alert('All fields must be filled');
+        }
+
+        console.log(`login: ${login}, email: ${email}, password: ${password}`);
+
+        setRegisterInformation({ type: 'registerInformation/reset' });
+    }
 
     return(
-        <ImageBackground 
-            source={require('../assets/images/background.jpg')}
-            resizeMode="cover" 
-            style={style.container}
-        >
-            <View style={style.form}>
-                <View style={style.photo}>
-                    <Pressable style={style.add}>
-                        <Image source={require('../assets/icons/Union.svg')} />
-                    </Pressable>
-                </View>
-                <Text style={style.title}>Реєстрація</Text>
-                <TextInput
-                    style={style.input}
-                    placeholder='Логін'
-                />
-                <TextInput
-                    style={style.input}
-                    placeholder='Адреса електронної пошти'
-                />
-                <TextInput
-                    style={[style.input, {marginBottom: 43}]}
-                    placeholder='Пароль'
-                />
-                { !isKeyboardOpen && (
-                    <>
-                        <Pressable style={style.button}>
-                            <Text style={{color: '#FFFFFF', fontSize: 16, }}>Нажми меня</Text>
-                        </Pressable>
-                        <Text style={style.text}>Вже є акаунт? Увійти</Text>
-                    </>
-                )}
-            </View>
-        </ImageBackground>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={style.form}>
+        <View style={style.photo}>
+            <Pressable style={style.add}>
+                <Image source={require('../assets/icons/Union.svg')} />
+            </Pressable>
+        </View>
+        <Text style={style.title}>Реєстрація</Text>
+        <TextInput
+            style={style.input}
+            placeholder='Логін'
+            keyboardType='default'
+            value={registerInformation.login}
+            onChangeText={(payload) => 
+                setRegisterInformation({ type: 'registerInformation/login', payload })
+            }
+        />
+        <TextInput
+            style={style.input}
+            placeholder='Адреса електронної пошти'
+            keyboardType='email-address'
+            value={registerInformation.email}
+            onChangeText={(payload) => 
+                setRegisterInformation({type: 'registerInformation/email', payload})
+            }
+        />
+        <InputPassword 
+            password={registerInformation.password} 
+            dispatch={setRegisterInformation}
+        />
+        { !isKeyboardOpen && (
+            <>
+                <Pressable style={style.button} onPress={henadelSubmit}>
+                    <Text style={{color: '#FFFFFF', fontSize: 16, }}>Нажми меня</Text>
+                </Pressable>
+                <Text style={style.text}>Вже є акаунт? Увійти</Text>
+            </>
+        )}
+    </View>
+    </TouchableWithoutFeedback>
     );
 }
 
@@ -124,7 +174,22 @@ const style = StyleSheet.create({
         fontSize: 16,
         color: "#1B4371",
         marginBottom: 40,
-    }
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        position: 'relative',
+    },
+    inputButton: {
+        position: 'absolute',
+        top: 10,
+        right: 16,
+    },
+    inputPassword:{
+        flex: 1,
+        height: 40,
+        paddingHorizontal: 10,
+        height: '100%',
+    },
 });
-
 export default RegistrationScreen;

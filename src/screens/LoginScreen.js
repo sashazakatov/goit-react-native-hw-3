@@ -1,8 +1,41 @@
-import { useEffect, useState } from 'react';
-import { Pressable, Text, TextInput, View, StyleSheet, ImageBackground, Keyboard } from 'react-native';
+import { useEffect, useState, useReducer } from 'react';
+import { 
+    Pressable, 
+    Text, 
+    TextInput, 
+    View, 
+    StyleSheet, 
+    ImageBackground, 
+    Keyboard, 
+    TouchableWithoutFeedback,
+    Button,
+    TouchableOpacity,
+    Alert
+} from 'react-native';
+import InputPassword from '../companents/InputPassword';
+
+const initialState = {
+    email: '',
+    password: '',
+}
+
+function reducer(state, action) {
+    switch (action.type){
+        case 'registerInformation/email':
+            return { ...state, email: action.payload }
+        case 'registerInformation/password':
+            return { ...state, password: action.payload }
+        case 'registerInformation/reset':
+            return initialState;
+        default:
+            Alert.alert('Data entry error, invalid input field');
+            return state;
+    }
+}
 
 const LoginScreen = () => {
-    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+    const [isKeyboardOpen, setIsKeyboardOpen] = useState(true);
+    const [registerInformation, setRegisterInformation] = useReducer(reducer, initialState);
 
     useEffect(() => {
       const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
@@ -19,38 +52,49 @@ const LoginScreen = () => {
       };
     }, []);
 
-    console.log(!isKeyboardOpen);
+
+    const henadelSubmit = () => {
+        const { email, password } = registerInformation;
+
+        if( email === '' || password === ''){
+            return Alert.alert('All fields must be filled');
+        }
+
+        console.log(`email: ${email}, password: ${password}`);
+
+        setRegisterInformation({ type: 'registerInformation/reset' });
+    }
 
     return(
-        <ImageBackground 
-            source={require('../assets/images/background.jpg')}
-            resizeMode="cover" 
-            style={style.container}
-        >
-
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={style.form}>
                 <View style={style.photo}>
                     {/* <Button title='add'/> */}
                 </View>
-                <Text style={style.title}>Реєстрація</Text>
-                <TextInput
-                    style={style.input}
-                    placeholder='Адреса електронної пошти'
-                />
-                <TextInput
-                    style={[style.input, {marginBottom: 43}]}
-                    placeholder='Пароль'
-                />
-                { !isKeyboardOpen && (
-                    <>
-                        <Pressable style={style.button}>
-                            <Text style={{color: '#FFFFFF', fontSize: 16, }}>Нажми меня</Text>
-                        </Pressable>
-                        <Text style={style.text}>Немає акаунту? Зареєструватися</Text>
-                    </>
-                )}
-            </View>
-        </ImageBackground>
+            <Text style={style.title}>Реєстрація</Text>
+            <TextInput
+                style={style.input}
+                placeholder='Адреса електронної пошти'
+                keyboardType='email-address'
+                value={registerInformation.email}
+                onChangeText={(payload) => 
+                    setRegisterInformation({type: 'registerInformation/email', payload})
+            }
+            />
+            <InputPassword 
+                password={registerInformation.password} 
+                dispatch={setRegisterInformation}
+            />
+            { !isKeyboardOpen && (
+                <>
+                    <Pressable style={style.button} onPress={henadelSubmit}>
+                        <Text style={{color: '#FFFFFF', fontSize: 16, }}>Нажми меня</Text>
+                    </Pressable>
+                    <Text style={style.text}>Немає акаунту? Зареєструватися</Text>
+                </>
+            )}
+        </View>
+    </TouchableWithoutFeedback>
     );
 }
 
@@ -58,6 +102,8 @@ const style = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'flex-end',
+        height: '100%',
+        width: '100%',
     },
     form: {
         backgroundColor: '#fff',
@@ -113,7 +159,22 @@ const style = StyleSheet.create({
         fontSize: 16,
         color: "#1B4371",
         marginBottom: 40,
-    }
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        position: 'relative',
+    },
+    inputButton: {
+        position: 'absolute',
+        top: 10,
+        right: 16,
+    },
+    inputPassword:{
+        flex: 1,
+        height: 40,
+        paddingHorizontal: 10,
+        height: '100%',
+    },
 });
-
 export default LoginScreen;
